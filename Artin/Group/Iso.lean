@@ -1,5 +1,5 @@
 import Mathlib
-import Partition
+import Artin.Partition
 import Artin.Group.Basic
 import Artin.Group.Homo
 

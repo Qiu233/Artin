@@ -440,6 +440,10 @@ theorem add_comm' {A B : AddSubgroup ℤ} : A + B = B + A := by
   rw [add_comm']
   exact add_zero'
 
+
+/--
+This lemma uses `Int.gcd_least_linear`.
+-/
 lemma aux_12 {a b k x : ℤ} : 0 < a → k * ↑(Int.gcd a b) = x → ∃ r s, r * a + s * b = x := by
   intro ha' h
   have := Int.gcd_least_linear (a := a) (b := b) (by linarith)
@@ -540,24 +544,5 @@ theorem sum_eq_ℤ_of_coprime (a b : ℤ) : a ≠ 0 → b ≠ 0 → IsCoprime a 
         arg 2
         rw [← h, ← gen_cancel b (le_of_lt h2), ← gen_cancel a (le_of_lt h1)]
       apply sum_eq_gen_gcd
-
-
-
-#check Int.natAbs_neg
-#check Int.neg_gcd
-#check Int.gcd_eq_one_iff_coprime
-#check Int.abs_eq_natAbs
-#check Int.natAbs_of_nonneg
-#check Int.natAbs_eq
-#check Symmetric
-#check Dvd.intro_left
-#check Int.instDvdInt.dvd
-#check Int.instDvdInt
-#check Int.gcd_dvd_iff
-#check Int.gcd
-#check Int.gcd_dvd_left
--- #check Int.mul_dvd
-#check Int.dvd_trans
-
 
 end Group.Examples
