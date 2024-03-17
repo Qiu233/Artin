@@ -147,6 +147,7 @@ theorem left_coset_mul_by_self {H : Subgroup G} :
       simp
       exact hh'.2
 
+/--Lemma 2.8.7-/
 theorem left_cosets_equipotent {H : Subgroup G} (x y : (left_cosets H : Set (Set G))) : Nonempty (x ≃ y) := by
   have hx := x.2
   have hy := y.2
@@ -221,6 +222,7 @@ private lemma Fin.eq_of_equiv : (Fin m ≃ Fin n) → m = n := by
   rw [fm, fn]
   apply Nat.card_congr h
 
+/--Theorem 2.8.9-/
 theorem subgroup_divides {H : Subgroup G} :
     Fin k ≃ G → Fin n ≃ H → Fin m ≃ (left_cosets H : Set (Set G)) → k = m * n := by
   intro h1 h2 h3
