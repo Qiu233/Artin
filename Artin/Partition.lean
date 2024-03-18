@@ -22,14 +22,14 @@ structure Partition (α : Type*) where
   disjoint : ∀ A ∈ partitions, ∀ B ∈ partitions, A ≠ B → Set.Disjoint A B
   union : ⋃₀ partitions = Set.univ
 
-instance : Coe (Partition α) (Set (Set α)) where
-  coe x := x.partitions
+namespace Partition
+
+attribute [coe, reducible] partitions
+instance : Coe (Partition α) (Set (Set α)) := ⟨Partition.partitions⟩
 
 @[reducible, simp]
 instance {α : Type*} : Membership (Set α) (Partition α) where
   mem s S := s ∈ S.partitions
-
-namespace Partition
 
 variable {p : Partition α}
 

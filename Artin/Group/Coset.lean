@@ -9,7 +9,7 @@ instance cmul_right [Group G] : HMul (Subgroup G) G (Set G) where
 
 namespace Coset
 
-variable [Group G] [Group G']
+variable [Group G] [Group G'] {H : Subgroup G}
 
 @[simp]
 theorem mem_left_coset {H : Subgroup G} {x : G} : x ∈ x * H := by
@@ -213,7 +213,7 @@ theorem left_coset_iff_genby {H : Subgroup G} {S : Set G} :
     exact ha.2
 
 theorem right_coset_iff_genby {H : Subgroup G} {S : Set G} :
-    S ∈ (right_cosets H).1 ↔ ∃ a ∈ S, H * a = S := by
+    S ∈ (right_cosets H) ↔ ∃ a ∈ S, H * a = S := by
   apply Iff.intro
   . intro ⟨a, ha⟩
     use a
@@ -226,14 +226,15 @@ theorem right_coset_iff_genby {H : Subgroup G} {S : Set G} :
     use a
     exact ha.2
 
+open Cardinal in
 /--Lemma 2.8.7-/
 theorem left_cosets_equipotent {H : Subgroup G} {x y : Set G} :
-    (x ∈ (left_cosets H).1) → (y ∈ (left_cosets H).1) → Nonempty (x ≃ y) := by
+    (x ∈ (left_cosets H)) → (y ∈ (left_cosets H)) → #x = #y := by
   intro hx hy
   simp [left_coset_iff_genby] at hx hy
   obtain ⟨a, ha⟩ := hx
   obtain ⟨b, hb⟩ := hy
-  rw [← ha.2, ← hb.2]
+  simp [Cardinal.eq, ← ha.2, ← hb.2]
   let t : a * H → b * H := λ t => ⟨b * (a⁻¹ * t), by
     have ⟨h, h'⟩ := t.2
     simp [← h'.2, cmul_left, h'.1]
