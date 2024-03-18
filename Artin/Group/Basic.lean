@@ -5,11 +5,6 @@ namespace Group
 
 variable [Group G]
 
-@[simp] instance [Group G] : HMul G (Subgroup G) (Set G) where
-  hMul a H := {a * h | h ∈ H}
-@[simp] instance [Group G] : HMul (Subgroup G) G (Set G) where
-  hMul H a := {h * a | h ∈ H}
-
 theorem eq_iff_inv_eq {a b : G} : a = b ↔ a⁻¹ = b⁻¹ := by
   constructor
   . intro h

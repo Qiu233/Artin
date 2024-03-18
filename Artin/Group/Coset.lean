@@ -2,15 +2,38 @@ import Mathlib
 import Artin.Partition
 import Artin.Group.Basic
 
+instance cmul_left [Group G] : HMul G (Subgroup G) (Set G) where
+  hMul a H := {a * h | h ∈ H}
+instance cmul_right [Group G] : HMul (Subgroup G) G (Set G) where
+  hMul H a := {h * a | h ∈ H}
+
 namespace Coset
 
 variable [Group G] [Group G']
 
-theorem left_coset_order {H : Subgroup G} (o : Fin n ≃ H) :
+@[simp]
+theorem mem_left_coset {H : Subgroup G} {x : G} : x ∈ x * H := by
+  simp [cmul_left]
+  exact H.one_mem'
+
+@[simp]
+theorem mem_right_coset {H : Subgroup G} {x : G} : x ∈ H * x := by
+  simp [cmul_right]
+  exact H.one_mem'
+
+@[simp]
+theorem one_cmul {H : Subgroup G} : (1 : G) * H = H := by
+  simp [cmul_left, Set.ext_iff]
+
+@[simp]
+theorem cmul_one {H : Subgroup G} : H * (1 : G) = H := by
+  simp [cmul_right, Set.ext_iff]
+
+theorem left_coset_order' {H : Subgroup G} (o : Fin n ≃ H) :
   ∀ a : G, Fin n ≃ (a * H) := by
   intro a
   apply Equiv.trans (β := H) o
-  let t : H → a * H := λ x => ⟨a * x, by simp⟩
+  let t : H → a * H := λ x => ⟨a * x, by simp [cmul_left]⟩
   let t' : a * H → H := λ y => ⟨a⁻¹ * y, ?_⟩
   . apply Equiv.mk t t'
     . unfold Function.LeftInverse; simp
@@ -19,200 +42,219 @@ theorem left_coset_order {H : Subgroup G} (o : Fin n ≃ H) :
     rw [← hh.2, ← mul_assoc, mul_left_inv, one_mul]
     exact hh.1
 
+theorem right_coset_order' {H : Subgroup G} (o : Fin n ≃ H) :
+  ∀ a : G, Fin n ≃ (H * a) := by
+  intro a
+  apply Equiv.trans (β := H) o
+  let t : H → H * a := λ x => ⟨x * a, by simp [cmul_right]⟩
+  let t' : H * a → H := λ y => ⟨y * a⁻¹, ?_⟩
+  . apply Equiv.mk t t'
+    . unfold Function.LeftInverse; simp
+    . unfold Function.RightInverse Function.LeftInverse; simp
+  . have ⟨h, hh⟩ := y.2
+    rw [← hh.2, mul_assoc, mul_right_inv, mul_one]
+    exact hh.1
+
 private lemma left_coset_eq_of_inter' {H : Subgroup G} {a b : G} :
     (∃ t, t ∈ a * H ∧ t ∈ b * H) → a * H = b * H := by
+  have {a b : G} : (∃ t, t ∈ a * H ∧ t ∈ b * H) → a * H ⊆ b * H := by
+    intro ⟨t, ht⟩
+    simp [cmul_left] at ht
+    intro x ⟨c, hc⟩
+    simp [← hc.2]
+    use (b⁻¹ * a * c)
+    apply And.intro ?_
+    . simp [mul_assoc]
+    . apply mul_mem ?_ hc.1
+      obtain ⟨⟨ta, hta⟩, ⟨tb, htb⟩⟩:= ht
+      have ha : a = t * ta⁻¹ := by
+        apply mul_right_cancel (b := ta)
+        simp [hta.2]
+      have hb : b = t * tb⁻¹ := by
+        apply mul_right_cancel (b := tb)
+        simp [htb.2]
+      simp [ha, hb, ← mul_assoc]
+      apply mul_mem htb.1 (inv_mem hta.1)
   intro h
-  ext x
-  unfold HMul.hMul Group.instHMulSubgroupSet at *
-  simp
-  constructor
-  . intro ⟨t, ht⟩
-    use (b⁻¹ * a * t)
-    constructor
-    . apply H.mul_mem' ?_ ht.1
-      obtain ⟨u, ⟨hua, hub⟩⟩ := h
-      simp at hua hub
-      obtain ⟨ta, hta⟩ := hua
-      obtain ⟨tb, htb⟩ := hub
-      rw [(?_ : a = u * ta⁻¹)]
-      rw [(?_ : b = u * tb⁻¹)]
-      simp
-      rw [mul_assoc]
-      rw [← mul_assoc u⁻¹]
-      simp
-      apply H.mul_mem' htb.1
-      simp
-      exact hta.1
-      . apply mul_right_cancel (b := tb)
-        simp
-        exact htb.2
-      . apply mul_right_cancel (b := ta)
-        simp
-        exact hta.2
-    . rw [← mul_assoc]
-      rw [← mul_assoc]
-      simp
-      exact ht.2
-  . intro ⟨t, ht⟩
-    use (a⁻¹ * b * t)
-    constructor
-    . apply H.mul_mem' ?_ ht.1
-      obtain ⟨u, ⟨hua, hub⟩⟩ := h
-      simp at hua hub
-      obtain ⟨ta, hta⟩ := hua
-      obtain ⟨tb, htb⟩ := hub
-      rw [(?_ : a = u * ta⁻¹)]
-      rw [(?_ : b = u * tb⁻¹)]
-      simp
-      rw [mul_assoc]
-      rw [← mul_assoc u⁻¹]
-      simp
-      apply H.mul_mem' hta.1
-      simp
-      exact htb.1
-      . apply mul_right_cancel (b := tb)
-        simp
-        exact htb.2
-      . apply mul_right_cancel (b := ta)
-        simp
-        exact hta.2
-    . rw [← mul_assoc]
-      rw [← mul_assoc]
-      simp
-      exact ht.2
+  have fa := this h
+  conv at h =>
+    congr; intro t
+    rw [And.comm]
+  have fb := this h
+  apply Set.eq_of_subset_of_subset fa fb
+
+private lemma right_coset_eq_of_inter' {H : Subgroup G} {a b : G} :
+    (∃ t, t ∈ H * a ∧ t ∈ H * b) → H * a = H * b := by
+  have {a b : G} : (∃ t, t ∈ H * a ∧ t ∈ H * b) → H * a ⊆ H * b := by
+    intro ⟨t, ht⟩
+    simp [cmul_right] at ht
+    intro x ⟨c, hc⟩
+    simp [← hc.2]
+    use (c * a * b⁻¹)
+    apply And.intro ?_
+    . simp
+    . rw [mul_assoc]
+      apply mul_mem hc.1
+      obtain ⟨⟨ta, hta⟩, ⟨tb, htb⟩⟩:= ht
+      have ha : a = ta⁻¹ * t := by
+        apply mul_left_cancel (a := ta)
+        simp [hta.2]
+      have hb : b = tb⁻¹ * t := by
+        apply mul_left_cancel (a := tb)
+        simp [htb.2]
+      simp [ha, hb, ← mul_assoc]
+      apply mul_mem (inv_mem hta.1) htb.1
+  intro h
+  have fa := this h
+  conv at h =>
+    congr; intro t
+    rw [And.comm]
+  have fb := this h
+  apply Set.eq_of_subset_of_subset fa fb
 
 def left_cosets (H : Subgroup G) : Partition G := ⟨{a * H | a : G}, p1, p2⟩ where
-  p1 a ha b hb h := by
-    intro h'
+  p1 a ha b hb h h' := by
+    apply h
+    obtain ⟨ta, hta⟩ := ha
+    obtain ⟨tb, htb⟩ := hb
+    rw [← hta, ← htb] at h'
+    rw [← hta, ← htb]
+    apply left_coset_eq_of_inter' h'
+  p2 := by
+    ext x
+    simp
+    use x, 1
+    simp
+    apply H.one_mem'
+
+def right_cosets (H : Subgroup G) : Partition G := ⟨{H * a | a : G}, p1, p2⟩ where
+  p1 a ha b hb h h' := by
     apply h
     obtain ⟨ta, hta⟩ := ha
     obtain ⟨tb, htb⟩ := hb
     rw [← hta, ← htb]
     rw [← hta, ← htb] at h'
-    apply left_coset_eq_of_inter' h'
+    apply right_coset_eq_of_inter' h'
   p2 := by
     ext x
     simp
-    use x
-    use 1
+    use x, 1
     simp
     apply H.one_mem'
 
-theorem left_coset_eq_of_inter {H : Subgroup G} {x y : (left_cosets H : Set (Set G))} :
-    (∃ t, t ∈ x.1 ∧ t ∈ y.1) → x = y := by
+theorem subgroup_mem_left_cosets {H : Subgroup G} : H.carrier ∈ (left_cosets H) := by
+  use 1
+  simp [left_cosets, Set.ext_iff]
+
+theorem left_coset_eq_of_inter {H : Subgroup G} {x y : Set G}
+  (ha : x ∈ (left_cosets H)) (hb : y ∈ (left_cosets H)) :
+    (∃ t, t ∈ x ∧ t ∈ y) → x = y := by
   intro h
-  have ha := x.2
-  have hb := y.2
-  unfold left_cosets at ha hb
-  simp at ha hb
+  simp [left_cosets] at ha hb
   have ⟨ta, hta⟩ := ha
   have ⟨tb, htb⟩ := hb
-  rw [Subtype.ext_iff]
   rw [← hta, ← htb] at h
   rw [← hta, ← htb]
   apply left_coset_eq_of_inter' h
 
-theorem left_cosets_elem_order {H : Subgroup G} (o : Fin n ≃ H) (c : Set G) (h : c ∈ (left_cosets H : Set (Set G))) :
-  Fin n ≃ c := by
-  unfold left_cosets at h; simp at h
-  let ha := h.choose_spec
-  rw [← ha]
-  apply left_coset_order o
+theorem right_coset_eq_of_inter {H : Subgroup G} {x y : Set G}
+  (ha : x ∈ (right_cosets H)) (hb : y ∈ (right_cosets H)) :
+    (∃ t, t ∈ x ∧ t ∈ y) → x = y := by
+  intro h
+  simp [right_cosets] at ha hb
+  have ⟨ta, hta⟩ := ha
+  have ⟨tb, htb⟩ := hb
+  rw [← hta, ← htb] at h
+  rw [← hta, ← htb]
+  apply right_coset_eq_of_inter' h
 
-theorem left_coset_mul_by_self {H : Subgroup G} :
-  A ∈ (left_cosets H : Set (Set G)) → ∀ a ∈ A, a * H = A := by
-  unfold left_cosets
+theorem left_cosets_elem_order {H : Subgroup G} (o : Fin n ≃ H) (c : Set G) (h : c ∈ (left_cosets H)) :
+  Fin n ≃ c := by
+  simp [left_cosets] at h
+  rw [← h.choose_spec]
+  apply left_coset_order' o
+
+theorem right_cosets_elem_order {H : Subgroup G} (o : Fin n ≃ H) (c : Set G) (h : c ∈ (right_cosets H)) :
+  Fin n ≃ c := by
+  simp [right_cosets] at h
+  rw [← h.choose_spec]
+  apply right_coset_order' o
+
+theorem cmul_left_by_member {H : Subgroup G} :
+  A ∈ (left_cosets H) → ∀ a ∈ A, a * H = A := by
   intro h a ha
-  simp at h
-  obtain ⟨t, ht⟩ := h
-  rw [← ht]
-  simp
-  rw [← ht] at ha
-  simp at ha
-  obtain ⟨h, hh⟩ := ha
-  rw [← hh.2]
-  ext x
-  constructor
-  . intro ⟨h', hh'⟩
-    simp
-    use h * h'
-    constructor
-    . apply H.mul_mem' hh.1 hh'.1
-    . simp [← mul_assoc, hh'.2]
-  . intro ⟨h', hh'⟩
-    use h⁻¹ * h'
-    constructor
-    . apply H.mul_mem' (H.inv_mem' hh.1) hh'.1
-    . rw [← mul_assoc]
-      simp
-      exact hh'.2
+  have : a * H ∈ (left_cosets H) := by
+    simp [left_cosets]
+  apply left_coset_eq_of_inter this h
+  use a
+  exact And.intro (mem_left_coset) ha
+
+theorem cmul_right_by_member {H : Subgroup G} :
+  A ∈ (right_cosets H) → ∀ a ∈ A, H * a = A := by
+  intro h a ha
+  have : H * a ∈ (right_cosets H) := by
+    simp [right_cosets]
+  apply right_coset_eq_of_inter this h
+  use a
+  exact And.intro (mem_right_coset) ha
+
+theorem left_coset_iff_genby {H : Subgroup G} {S : Set G} :
+    S ∈ (left_cosets H).1 ↔ ∃ a ∈ S, a * H = S := by
+  apply Iff.intro
+  . intro ⟨a, ha⟩
+    use a
+    apply And.intro ?_ ha
+    simp [cmul_left, Set.ext_iff] at ha
+    apply (ha a).mp
+    use 1
+    apply And.intro (H.one_mem') (mul_one a)
+  . intro ⟨a, ha⟩
+    use a
+    exact ha.2
+
+theorem right_coset_iff_genby {H : Subgroup G} {S : Set G} :
+    S ∈ (right_cosets H).1 ↔ ∃ a ∈ S, H * a = S := by
+  apply Iff.intro
+  . intro ⟨a, ha⟩
+    use a
+    apply And.intro ?_ ha
+    simp [cmul_right, Set.ext_iff] at ha
+    apply (ha a).mp
+    use 1
+    apply And.intro (H.one_mem') (one_mul a)
+  . intro ⟨a, ha⟩
+    use a
+    exact ha.2
 
 /--Lemma 2.8.7-/
-theorem left_cosets_equipotent {H : Subgroup G} (x y : (left_cosets H : Set (Set G))) : Nonempty (x ≃ y) := by
-  have hx := x.2
-  have hy := y.2
-  unfold left_cosets at hx hy
-  simp at hx hy
-  have ⟨a, ha⟩ := hx
-  have ⟨b, hb⟩ := hy
-  let t : x.1 → y.1 := λ t => ⟨b * a⁻¹ * t.1, by
-    have := t.2
-    conv at this => arg 2; rw [← ha]
-    simp at this
-    obtain ⟨h, hh⟩ := this
-    rw [← hh.2]
-    rw [mul_assoc]
-    rw [← mul_assoc a⁻¹]
-    simp
-    conv => arg 2; rw [← hb]
-    simp
-    exact hh.1
+theorem left_cosets_equipotent {H : Subgroup G} {x y : Set G} :
+    (x ∈ (left_cosets H).1) → (y ∈ (left_cosets H).1) → Nonempty (x ≃ y) := by
+  intro hx hy
+  simp [left_coset_iff_genby] at hx hy
+  obtain ⟨a, ha⟩ := hx
+  obtain ⟨b, hb⟩ := hy
+  rw [← ha.2, ← hb.2]
+  let t : a * H → b * H := λ t => ⟨b * (a⁻¹ * t), by
+    have ⟨h, h'⟩ := t.2
+    simp [← h'.2, cmul_left, h'.1]
     ⟩
-  have inj : Function.Injective t := by
-    simp
-    intro u v
-    simp
-    exact Subtype.ext_iff.mpr
+  have inj : Function.Injective t := by simp [Function.Injective]
   have surj : Function.Surjective t := by
-    simp
-    intro v
-    simp
-    use (a * b⁻¹ * v)
-    have := v.2
-    conv at this => arg 2; rw [← hb]
-    simp at this
-    obtain ⟨h, hh⟩ := this
-    have : a * b⁻¹ * v.1 ∈ x.1 := by
-      rw [← hh.2]
-      rw [mul_assoc]
-      rw [← mul_assoc b⁻¹]
-      simp
-      rw [← ha]
-      simp
-      exact hh.1
-    use this
-    rw [Subtype.ext_iff]
-    simp
-    rw [mul_assoc]
-    rw [← mul_assoc a⁻¹]
-    rw [← mul_assoc a⁻¹]
-    simp
-  exact Nonempty.intro (Equiv.ofBijective t ⟨inj, surj⟩)
+    simp [Function.Surjective]
+    intro y ⟨h, hy⟩
+    use (a * b⁻¹ * y)
+    apply And.intro <;> simp [mul_assoc, cmul_left, ← hy.2, hy.1]
+  exact Nonempty.intro $ Equiv.ofBijective t ⟨inj, surj⟩
 
-private lemma subgroup_divides_aux {H : Subgroup G} :
-    Fin n ≃ H → Fin m ≃ (left_cosets H : Set (Set G)) → Fin (m * n) ≃ G := by
+private lemma subgroup_divides_G_left_aux {H : Subgroup G} :
+    Fin n ≃ H → Fin m ≃ (left_cosets H).partitions → Fin (m * n) ≃ G := by
   intro h2 h3
-  have := left_coset_order (H := H) h2
-  have : ∀ x ∈ (left_cosets H : Set (Set G)), Fin n ≃ x := by
+  have := left_coset_order' (H := H) h2
+  have : ∀ x ∈ (left_cosets H), Fin n ≃ x := by
     intro x hx
-    unfold left_cosets at hx
-    simp at hx
-    let a := hx.choose
-    have ha := hx.choose_spec
-    have := this a
-    simp at this
-    rw [← ha]
-    exact this
+    simp [left_cosets] at hx
+    rw [← hx.choose_spec]
+    apply this
   exact Partition.join_finite_uniform (p := left_cosets H) h3 this
 
 private lemma Fin.eq_of_equiv : (Fin m ≃ Fin n) → m = n := by
@@ -223,10 +265,10 @@ private lemma Fin.eq_of_equiv : (Fin m ≃ Fin n) → m = n := by
   apply Nat.card_congr h
 
 /--Theorem 2.8.9-/
-theorem subgroup_divides {H : Subgroup G} :
-    Fin k ≃ G → Fin n ≃ H → Fin m ≃ (left_cosets H : Set (Set G)) → k = m * n := by
+theorem subgroup_divides_G_left {H : Subgroup G} :
+    Fin k ≃ G → Fin n ≃ H → Fin m ≃ (left_cosets H).partitions → k = m * n := by
   intro h1 h2 h3
-  have := subgroup_divides_aux h2 h3
+  have := subgroup_divides_G_left_aux h2 h3
   have := Equiv.trans this h1.symm
   apply Fin.eq_of_equiv
   exact this.symm
