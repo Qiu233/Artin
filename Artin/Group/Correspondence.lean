@@ -48,6 +48,11 @@ theorem normal_of_surj_of_inverse_normal :
   apply normal_inv
   simp [hn, h𝓃]
 
+
+
+/--
+A subgroup's image through homomorphism is also a subgroup.
+-/
 def corr_map (H : {H : Subgroup G | (ker ϕ).carrier ⊆ H.carrier}) : Subgroup 𝒢 where
   carrier := {ϕ h | h ∈ H.1}
   mul_mem' {𝓍 𝓎} h𝓍 h𝓎 := by
@@ -73,6 +78,9 @@ def corr_map (H : {H : Subgroup G | (ker ϕ).carrier ⊆ H.carrier}) : Subgroup 
     . simp
       rw [hx.2]
 
+/--
+A subgroup's inverse image through homomorphism is a subgroup, containing the kernel.
+-/
 def corr_map' (ℋ : Subgroup 𝒢) : {H : Subgroup G | (ker ϕ).carrier ⊆ H.carrier} where
   val :=
   {
@@ -95,6 +103,11 @@ def corr_map' (ℋ : Subgroup 𝒢) : {H : Subgroup G | (ker ϕ).carrier ⊆ H.c
     rw [hg]
     apply ℋ.one_mem'
 
+/--
+`corr_map'` is a left inverse of `corr_map`.
+
+This theorem requires no additional property of the homomorphism `ϕ`.
+-/
 theorem corr_map_left_inverse (H : {H : Subgroup G | (ker ϕ).carrier ⊆ H.carrier}) :
     (corr_map' ϕ) (corr_map ϕ H) = H := by
   simp [corr_map, corr_map']
@@ -125,6 +138,11 @@ theorem corr_map_left_inverse (H : {H : Subgroup G | (ker ϕ).carrier ⊆ H.carr
   . intro h
     use g
 
+/--
+`corr_map'` is a right inverse of `corr_map`.
+
+This theorem requires that `ϕ` be surjective.
+-/
 theorem corr_map_right_inverse (surj : Function.Surjective ϕ) (ℋ : Subgroup 𝒢) :
     (corr_map ϕ) (corr_map' ϕ ℋ) = ℋ := by
   simp [corr_map, corr_map']
@@ -140,14 +158,19 @@ theorem corr_map_right_inverse (surj : Function.Surjective ϕ) (ℋ : Subgroup �
     use g
     simp [hg, h]
 
+/--
+This theorem states that, given a **surjective** homomorphism `ϕ : G → 𝓖`, the following two sets are equipotent:
+* {H : Subgroup G | ker ϕ ⊆ H}
+* {𝓗 : Subgroup 𝓖}
 
+which is indicated by witness of such a bijection:
+* φ   = H ↦ {ϕ h | h ∈ H}
+* φ⁻¹ = 𝓗 ↦ {h | ϕ h ∈ 𝓗}
+-/
 theorem correspondence (surj : Function.Surjective ϕ) :
   {H : Subgroup G | (ker ϕ).carrier ⊆ H.carrier} ≃ Subgroup 𝒢 :=
     ⟨corr_map ϕ, corr_map' ϕ, corr_map_left_inverse ϕ, corr_map_right_inverse ϕ surj⟩
 
 
-end Group
 
-#check LieIdeal.ker_incl
-#check Subgroup.ker_inclusion
-#check MonoidHom.ker
+end Group

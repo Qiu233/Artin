@@ -29,7 +29,7 @@ theorem eq_iff_inv_eq {a b : G} : a = b ↔ a⁻¹ = b⁻¹ := by
     rw [h]
     simp
 
-def center : Subgroup G where
+def center (G : Type u) [Group G] : Subgroup G where
   carrier := {z | ∀ x : G, z * x = x * z}
   mul_mem' {a b} ha hb x := by
     simp at *
