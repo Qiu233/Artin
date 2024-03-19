@@ -138,4 +138,76 @@ theorem card_decomp (H : Subgroup G) : #(left_cosets H) * #H = #G := by
 
 end Coset
 
+namespace Coset
+
+variable [Group G] {H : Subgroup G} (normal : Subgroup.Normal H)
+
+/--Proposition 2.8.18 (a)-/
+def conjugate_subgroup (H : Subgroup G) (g : G) : Subgroup G where
+  carrier := g * H * g⁻¹
+  mul_mem' {x y} hx hy := by
+    simp [cmul_left, smul_right] at *
+    obtain ⟨a, ha⟩ := hx
+    obtain ⟨b, hb⟩ := hy
+    rw [← ha.2, ← hb.2]
+    use a * b
+    simp [mul_assoc]
+    apply H.mul_mem' ha.1 hb.1
+  one_mem' := by
+    simp [cmul_left, smul_right]
+    exact H.one_mem'
+  inv_mem' {x} hx := by
+    simp [cmul_left, smul_right] at *
+    obtain ⟨a, ha⟩ := hx
+    rw [← ha.2]
+    use a⁻¹
+    simp [ha.1, ← mul_assoc]
+
+
+/--Proposition 2.8.17 (ii)-/
+theorem conjugate_subgroup_eq_of_normal :
+    ∀ {g : G}, conjugate_subgroup H g = H := by
+  intro g
+  ext x
+  simp [conjugate_subgroup]
+  simp [cmul_left, smul_right]
+  apply Iff.intro
+  . intro ⟨a, ha⟩
+    simp [← ha.2]
+    exact normal.1 a ha.1 g
+  . intro hx
+    use g⁻¹ * x * g
+    simp [mul_assoc]
+    rw [← mul_assoc]
+    have := normal.1 x hx g⁻¹
+    simp at this
+    exact this
+
+/--Proposition 2.8.17 (iii)-/
+theorem left_coset_eq_right_coset_of_normal {g : G} :
+    g * H = H * g := by
+  ext x
+  simp [cmul_left, cmul_right]
+  apply Iff.intro
+  . intro ⟨a, ha⟩
+    rw [← ha.2]
+    use g * a * g⁻¹
+    simp
+    exact normal.1 a ha.1 g
+  . intro ⟨a, ha⟩
+    rw [← ha.2]
+    use g⁻¹ * a * g
+    simp [mul_assoc]
+    have := normal.1 a ha.1 g⁻¹
+    simp at this
+    rw [← mul_assoc]
+    exact this
+
+
+
+end Coset
+
+
+
 end Group
+-- #check Subgroup.card

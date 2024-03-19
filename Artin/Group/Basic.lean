@@ -12,6 +12,13 @@ instance cmul_left [Group G] : HMul G (Subgroup G) (Set G) where
 instance cmul_right [Group G] : HMul (Subgroup G) G (Set G) where
   hMul H a := {h * a | h ∈ H}
 
+@[reducible]
+instance smul_left [Group G] : HMul G (Set G) (Set G) where
+  hMul a H := {a * h | h ∈ H}
+@[reducible]
+instance smul_right [Group G] : HMul (Set G) G (Set G) where
+  hMul H a := {h * a | h ∈ H}
+
 theorem eq_iff_inv_eq {a b : G} : a = b ↔ a⁻¹ = b⁻¹ := by
   constructor
   . intro h
