@@ -68,8 +68,6 @@ instance : Group (SymmGroup n) where
 
 instance decEq : DecidableEq (SymmGroup n) := (inferInstance : DecidableEq (Fin n ≃ Fin n))
 
--- def toList (x : SymmGroup n) : List (Fin n) := Fin.foldr n (λ i s => (x.1 i) :: s) []
-
 def swap_id {n : ℕ+} (i j : Fin n) : SymmGroup n :=
   ⟨Fin.swap i j, Fin.swap i j, p1, p2⟩ where
   p1 := Function.leftInverse_iff_comp.mpr Fin.swap_inv

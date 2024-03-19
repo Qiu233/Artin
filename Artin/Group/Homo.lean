@@ -54,12 +54,12 @@ theorem ϕeq_iff_mem_coset_ker {a b : G} : ϕ a = ϕ b ↔ b ∈ a * ker ϕ := b
   constructor
   . intro h
     unfold ker
-    simp
+    simp [cmul_left]
     use (a⁻¹ * b)
     simp [h]
   . intro h
     unfold ker at h
-    simp at h
+    simp [cmul_left] at h
     have ⟨t, ht⟩ := h
     rw [← ht.2]
     simp
@@ -69,7 +69,7 @@ example {a b : G} : ϕ a = ϕ b → a * ker ϕ = b * ker ϕ := by
   intro h
   ext x
   unfold ker
-  simp
+  simp [cmul_left]
   constructor
   . intro ⟨t, ht⟩
     use (b⁻¹ * a * t)
@@ -92,7 +92,7 @@ example : Function.Injective ϕ ↔ (ker ϕ).carrier = {1} := by
   . intro h
     intro x y h'
     have := ϕeq_iff_mem_coset_ker.mp h'
-    unfold ker at this; simp at this
+    unfold ker at this; simp [cmul_left] at this
     have ⟨t, ht⟩ := this
     rw [← ht.2]
     simp

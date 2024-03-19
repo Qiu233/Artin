@@ -2,12 +2,7 @@ import Mathlib
 import Artin.Partition
 import Artin.Group.Basic
 
-@[reducible]
-instance cmul_left [Group G] : HMul G (Subgroup G) (Set G) where
-  hMul a H := {a * h | h ∈ H}
-@[reducible]
-instance cmul_right [Group G] : HMul (Subgroup G) G (Set G) where
-  hMul H a := {h * a | h ∈ H}
+namespace Group
 
 namespace Coset
 variable {G : Type u}
@@ -56,20 +51,6 @@ private theorem left_cosets_all_nonempty : ∀ cs ∈ left_cosets H, Set.Nonempt
   use a
   simp [← ha, cmul_left]
   exact H.one_mem'
-
--- private def left_cosets_indexes : Set G :=
---   {Classical.choice (Set.Nonempty.coe_sort (left_cosets_all_nonempty s.1 s.2)) | s : left_cosets H}
-
--- instance setoid_left (H : Subgroup G) : Setoid G where
---   r x y := x * H = y * H
---   iseqv :=
---   {
---     refl := fun _ => Eq.refl _
---     symm := fun {_ _} => Eq.symm
---     trans := fun {_ _ _} => Eq.trans
---   }
-
--- def quotient_left (H : Subgroup G) := Quotient (setoid_left H)
 
 def indexer_left : left_cosets H → Set G := (·.1)
 
@@ -156,3 +137,5 @@ theorem card_decomp (H : Subgroup G) : #(left_cosets H) * #H = #G := by
   exact card_decomp_dep H
 
 end Coset
+
+end Group
