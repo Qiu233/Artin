@@ -3,7 +3,7 @@ import Artin.Group.Basic
 
 namespace Group
 
-class Homomorphism {G G' : Type*} [Group G] [Group G'] (ϕ : G → G') :=
+class Homomorphism {G G' : Type*} [Group G] [Group G'] (ϕ : G → G') : Prop :=
   linear : ∀ x y : G, ϕ (x * y) = ϕ x * ϕ y
 
 namespace Homomorphism

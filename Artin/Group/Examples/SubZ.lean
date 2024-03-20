@@ -333,7 +333,7 @@ theorem genby_abs {a : ℤ} : (ℤ ⬝ |a|) = (ℤ ⬝ a) := by
   rw [mul_comm]
   exact aux_6 _ (gen_mem S)
 
-@[simp] theorem gen_mul_left_iff {S : AddSubgroup ℤ} : ∀ s, (∃ n, n * gen S = s) ↔ s ∈ S := by
+@[simp] theorem gen_mul_left_iff {S : AddSubgroup ℤ} : ∀ {s}, (∃ n, n * gen S = s) ↔ s ∈ S := by
   intro s
   apply Iff.intro
   . intro ⟨n, hn⟩
@@ -344,7 +344,7 @@ theorem genby_abs {a : ℤ} : (ℤ ⬝ |a|) = (ℤ ⬝ a) := by
     simp [AddSubgroup.ext_iff, Set.ext_iff] at this
     apply (this s).mp hs
 
-@[simp] theorem gen_mul_right_iff {S : AddSubgroup ℤ} : ∀ s, (∃ n, gen S * n = s) ↔ s ∈ S := by
+@[simp] theorem gen_mul_right_iff {S : AddSubgroup ℤ} : ∀ {s}, (∃ n, gen S * n = s) ↔ s ∈ S := by
   conv =>
     intro s
     arg 1
@@ -385,7 +385,7 @@ theorem gen_least_pos {S : AddSubgroup ℤ} : 0 < gen S → IsLeast {s ∈ S | 0
     apply not_not.mp
     intro hn
     simp at hn
-    have ⟨t, ht⟩ := (gen_mul_left_iff x).mpr hx
+    have ⟨t, ht⟩ := (gen_mul_left_iff).mpr hx
     exact aux_13 h' hn ht
 
 instance : Add (AddSubgroup ℤ) where
@@ -440,109 +440,97 @@ theorem add_comm' {A B : AddSubgroup ℤ} : A + B = B + A := by
   rw [add_comm']
   exact add_zero'
 
-
-/--
-This lemma uses `Int.gcd_least_linear`.
--/
-lemma aux_12 {a b k x : ℤ} : 0 < a → k * ↑(Int.gcd a b) = x → ∃ r s, r * a + s * b = x := by
-  intro ha' h
-  have := Int.gcd_least_linear (a := a) (b := b) (by linarith)
-  unfold IsLeast at this
-  simp at this
-  obtain ⟨⟨_, ⟨p, q, h1'⟩⟩, _⟩ := this
-  rw [← h, h1']
-  use (k * p)
-  use (k * q)
-  linarith
-
-theorem sum_eq_gen_gcd (A B : AddSubgroup ℤ) : A + B = ℤ ⬝ (Int.gcd (gen A) (gen B)) := by
-  ext x
-  unfold HAdd.hAdd instHAdd Add.add instAddAddSubgroupIntInstAddGroupInt genℤ
+@[simp] theorem subset_add_right' {A B : AddSubgroup ℤ} : A.carrier ⊆ (A + B).carrier := by
+  simp [HAdd.hAdd]
+  simp [Add.add]
+  intro x hx
   simp
-  have ta : ↑(Int.gcd (gen A) (gen B)) ∣ gen A := Int.gcd_dvd_left
-  have tb : ↑(Int.gcd (gen A) (gen B)) ∣ gen B := Int.gcd_dvd_right
-  unfold Dvd.dvd Int.instDvdInt at ta tb
-  simp at ta tb
-  obtain ⟨ca, ha⟩ := ta
-  obtain ⟨cb, hb⟩ := tb
-  apply Iff.intro
-  . intro ⟨r, s, h⟩
-    conv at h =>
-      arg 1
-      congr
-      . rw [ha]
-      . rw [hb]
-    use (r * ca + s * cb)
-    rw [← h]
-    linarith
-  . intro ⟨k, hk⟩
-    rcases le_iff_lt_or_eq.mp (gen_nonneg A) with h1 | h1
-    . apply aux_12 (k := k) h1 hk
-    . rcases le_iff_lt_or_eq.mp (gen_nonneg B) with h2 | h2
-      . rw [Int.gcd_comm] at hk
-        have ⟨s, r, h'⟩:= aux_12 (k := k) h2 hk
-        use r, s
-        linarith
-      . rw [← hk, ← h1, ← h2]
-        simp
+  have ⟨r, hr⟩ := gen_mul_left_iff.mpr hx
+  use r, 0
+  simp [hr]
 
-private theorem sum_eq_genby_gcd_pos {a b : ℤ} : 0 < a → 0 < b → ℤ ⬝ a + ℤ ⬝ b = ℤ ⬝ (Int.gcd a b) := by
-  intro ha hb
-  have fa := gen_cancel a (by linarith only [ha])
-  have fb := gen_cancel b (by linarith only [hb])
-  nth_rw 2 [← fa, ← fb]
-  apply sum_eq_gen_gcd
+/--gcd definition from artin-/
+@[reducible]
+noncomputable def gcd (a b : ℤ) := gen (ℤ ⬝ a + ℤ ⬝ b)
 
-theorem sum_eq_genby_gcd {a b : ℤ} : ℤ ⬝ a + ℤ ⬝ b = ℤ ⬝ (Int.gcd a b) := by
-  rcases lt_trichotomy a 0, lt_trichotomy b 0 with ⟨(h1 | h1 | h1),(h2 | h2 | h2)⟩
-  . rw [← Int.neg_gcd, ← Int.gcd_neg]
-    rw [← genby_neg a, ← genby_neg b]
-    apply sum_eq_genby_gcd_pos <;> linarith only [h1, h2]
-  . simp [h2]
-    symm
-    apply genby_abs
-  . rw [← Int.neg_gcd]
-    rw [← genby_neg a]
-    apply sum_eq_genby_gcd_pos <;> linarith only [h1, h2]
-  . simp [h1]
-    symm
-    apply genby_abs
-  . simp [h1, h2]
-  . simp [h1]
-    symm
-    apply genby_abs
-  . rw [← Int.gcd_neg]
-    rw [← genby_neg b]
-    apply sum_eq_genby_gcd_pos <;> linarith only [h1, h2]
-  . simp [h2]
-    symm
-    apply genby_abs
-  . apply sum_eq_genby_gcd_pos <;> linarith only [h1, h2]
+theorem gcd_linear_comb (ha : a ≠ 0) : ∃ r s : ℤ, gcd a b = r * a + s * b := by
+  simp [gcd]
+  simp [HAdd.hAdd]
+  simp [Add.add]
+  have : gen (genℤ a + genℤ b) ∈ genℤ a + genℤ b := by
+    simp
+  unfold HAdd.hAdd instHAdd at this
+  simp [Add.add] at this
+  obtain ⟨r, s, h⟩ := this
+  rw [← h]
+  rw [ne_iff_lt_or_gt] at ha
+  rcases ha with ha | ha
+  . use -r
+    rw [gen_cancel_neg a (le_of_lt ha)]
+    rcases lt_trichotomy b 0 with hb | hb | hb
+    . use -s
+      rw [gen_cancel_neg b (le_of_lt hb)]
+      linarith
+    . use 0
+      rw [hb, gen_cancel 0 (by simp)]
+      linarith
+    . use s
+      rw [gen_cancel b (le_of_lt hb)]
+      linarith
+  . use r
+    rw [gen_cancel a (le_of_lt ha)]
+    rcases lt_trichotomy b 0 with hb | hb | hb
+    . use -s
+      rw [gen_cancel_neg b (le_of_lt hb)]
+      linarith
+    . use 0
+      rw [hb, gen_cancel 0 (by simp)]
+      linarith
+    . use s
+      rw [gen_cancel b (le_of_lt hb)]
 
-/--2.3.5-/
-theorem sum_eq_ℤ_of_coprime (a b : ℤ) : a ≠ 0 → b ≠ 0 → IsCoprime a b → ℤ ⬝ a + ℤ ⬝ b = ℤ ⬝ ↑(1:ℕ) := by
-  intro ha hb h
-  rw [← Int.gcd_eq_one_iff_coprime] at h
-  rcases Int.lt_or_gt_of_ne ha with h1 | h1
-  . rcases Int.lt_or_gt_of_ne hb with h2 | h2
-    . rw [← Int.neg_gcd, ← Int.gcd_neg] at h
-      rw [← h, ← gen_cancel_neg, ← gen_cancel_neg]
-      apply sum_eq_gen_gcd
-      all_goals linarith
-    . rw [← Int.neg_gcd] at h
-      conv =>
-        arg 2
-        rw [← h, ← gen_cancel_neg a (le_of_lt h1), ← gen_cancel b (le_of_lt h2)]
-      apply sum_eq_gen_gcd
-  . rcases Int.lt_or_gt_of_ne hb with h2 | h2
-    . rw [← Int.gcd_neg] at h
-      conv =>
-        arg 2
-        rw [← h, ← gen_cancel_neg b (le_of_lt h2), ← gen_cancel a (le_of_lt h1)]
-      apply sum_eq_gen_gcd
-    . conv =>
-        arg 2
-        rw [← h, ← gen_cancel b (le_of_lt h2), ← gen_cancel a (le_of_lt h1)]
-      apply sum_eq_gen_gcd
+theorem gcd_comm : gcd a b = gcd b a := by simp [gcd, add_comm']
+
+theorem gcd_nonneg : 0 ≤ gcd a b := by
+  simp [gcd]
+  apply gen_nonneg
+
+theorem gcd_pos_of_ne_zero (ha : a ≠ 0) : 0 < gcd a b := by
+  have := gcd_nonneg (a := a) (b := b)
+  rw [lt_iff_le_and_ne]
+  apply And.intro (gcd_nonneg (a := a) (b := b))
+  intro hn
+  have : a ∈ genℤ a + genℤ b := by
+    apply Set.mem_of_mem_of_subset (s := ℤ ⬝ a)
+    . simp
+    . apply subset_add_right'
+  have ⟨r, hr⟩ := gen_mul_left_iff.mpr this
+  simp [gcd] at hn
+  simp [← hn] at hr
+  apply ha
+  simp [hr]
+
+
+/--Proposition 2.3.5 (a)-/
+theorem gcd_divides_left (ha : a ≠ 0) : gcd a b ∣ a := by
+  simp [gcd]
+  have : gen (genℤ a + genℤ b) ∈ genℤ a + genℤ b := by
+    simp
+  have a_mem : a ∈ genℤ a + genℤ b := by
+    apply Set.mem_of_mem_of_subset (s := ℤ ⬝ a)
+    . simp
+    . apply subset_add_right'
+  have ⟨r, hr⟩ := gen_mul_right_iff.mpr a_mem
+  simp [Dvd.dvd]
+  use r
+  simp [hr]
+
+/--Proposition 2.3.5 (a)-/
+theorem gcd_divides_right (ha : a ≠ 0) : gcd a b ∣ b := by
+  rw [gcd_comm]
+  rcases lt_trichotomy b 0 with hb | hb | hb
+  . apply gcd_divides_left (ne_of_lt hb)
+  . simp [hb]
+  . apply gcd_divides_left (ne_of_gt hb)
 
 end Group.Examples

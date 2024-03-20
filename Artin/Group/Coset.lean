@@ -184,7 +184,7 @@ theorem conjugate_subgroup_eq_of_normal :
     exact this
 
 /--Proposition 2.8.17 (iii)-/
-theorem left_coset_eq_right_coset_of_normal {g : G} :
+theorem left_coset_eq_right_coset_of_normal (g : G) :
     g * H = H * g := by
   ext x
   simp [cmul_left, cmul_right]

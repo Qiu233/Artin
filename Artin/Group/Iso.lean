@@ -5,7 +5,7 @@ import Artin.Group.Homo
 
 namespace Group
 
-class Isomorphism {G G' : Type*} [Group G] [Group G'] (ϕ : G → G') extends Homomorphism ϕ where
+class Isomorphism {G G' : Type*} [Group G] [Group G'] (ϕ : G → G') extends Homomorphism ϕ : Prop where
   bijective : Function.Bijective ϕ
 
 namespace Isomorphism
